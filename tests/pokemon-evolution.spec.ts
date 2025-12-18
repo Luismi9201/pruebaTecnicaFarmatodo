@@ -3,6 +3,7 @@ import { ordenar_alfabeticamente, PokemonData } from '../scripts/ordenamiento';
 import { extraer_nombres_de_cadena_evolucion } from '../scripts/pokemon';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 
 // Cargar variables de entorno desde el archivo .env en la raíz del proyecto
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -90,5 +91,62 @@ test('Prueba de integración: Cadena de evoluciones de Squirtle', async ({ reque
   // Verificar que Squirtle está en la lista
   const nombres_lowercase = pokemons_ordenados.map(p => p.name.toLowerCase());
   expect(nombres_lowercase).toContain('squirtle');
+
+  // Generar y guardar el reporte en archivo .txt
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const reporte_dir = path.resolve(__dirname, '../test-results/pokemon-reports');
+  
+  // Crear directorio si no existe
+  if (!fs.existsSync(reporte_dir)) {
+    fs.mkdirSync(reporte_dir, { recursive: true });
+  }
+
+  const nombre_archivo = `pokemon-evolution-result-${timestamp}.txt`;
+  const ruta_archivo = path.join(reporte_dir, nombre_archivo);
+
+  // Generar contenido del reporte
+  const contenido_reporte = `
+================================================================================
+REPORTE DE PRUEBA: Cadena de Evoluciones de Squirtle
+================================================================================
+Fecha y Hora: ${new Date().toLocaleString('es-ES')}
+Estado: EXITOSO
+
+--------------------------------------------------------------------------------
+RESUMEN DE LA PRUEBA
+--------------------------------------------------------------------------------
+Pokemon analizado: Squirtle
+Total de Pokemon en la cadena de evolución: ${nombres_pokemon.length}
+Total de Pokemon ordenados: ${pokemons_ordenados.length}
+
+--------------------------------------------------------------------------------
+NOMBRES ENCONTRADOS EN LA CADENA DE EVOLUCIÓN
+--------------------------------------------------------------------------------
+${nombres_pokemon.join(', ')}
+
+--------------------------------------------------------------------------------
+POKEMON ORDENADOS ALFABÉTICAMENTE CON SUS PESOS
+--------------------------------------------------------------------------------
+${pokemons_ordenados.map((p, index) => `${index + 1}. ${p.name}: ${p.weight} kg`).join('\n')}
+
+--------------------------------------------------------------------------------
+VALIDACIONES REALIZADAS
+--------------------------------------------------------------------------------
+✓ La lista de nombres no está vacía
+✓ El número de pokemons ordenados coincide con el número de nombres encontrados
+✓ El ordenamiento alfabético es correcto
+✓ Squirtle está presente en la lista
+
+--------------------------------------------------------------------------------
+INFORMACIÓN ADICIONAL
+--------------------------------------------------------------------------------
+Base URL utilizada: ${base_url}
+Algoritmo de ordenamiento: Bubble Sort (sin usar métodos nativos)
+================================================================================
+`;
+
+  // Escribir el archivo
+  fs.writeFileSync(ruta_archivo, contenido_reporte, 'utf-8');
+  console.log(`\n✅ Reporte guardado en: ${ruta_archivo}`);
 });
 
